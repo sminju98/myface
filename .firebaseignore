@@ -1,0 +1,30 @@
+# Dependency directories
+node_modules/
+functions/node_modules/
+
+# Development files
+.git/
+.gitignore
+.env
+*.log
+.vscode/
+.idea/
+
+# Test files
+__tests__/
+test/
+tests/
+*.test.js
+*.spec.js
+
+# Documentation
+docs/
+*.md
+
+# Source maps
+*.map
+
+# Build artifacts
+dist/
+build/
+.cache/ 

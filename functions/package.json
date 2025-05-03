@@ -1,0 +1,27 @@
+{
+  "name": "myface-functions",
+  "version": "1.0.0",
+  "description": "MyFace Cloud Functions",
+  "scripts": {
+    "serve": "firebase emulators:start --only functions",
+    "shell": "firebase functions:shell",
+    "start": "node index.js",
+    "deploy": "firebase deploy --only functions",
+    "logs": "firebase functions:log"
+  },
+  "engines": {
+    "node": "20"
+  },
+  "main": "index.js",
+  "dependencies": {
+    "@google-cloud/functions-framework": "^3.0.0",
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "firebase-functions": "^6.3.2",
+    "openai": "^4.96.2"
+  },
+  "devDependencies": {
+    "firebase-functions-test": "^3.1.0"
+  },
+  "private": true
+}
