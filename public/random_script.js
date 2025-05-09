@@ -134,10 +134,8 @@ document.addEventListener('DOMContentLoaded', () => {
     function showResult(type, result) {
         hideLoading();
         if (type === 'celebrity') {
-            console.log('celebrity similarityText:', result.similarityText);
             // celebrity 결과 카드
-            const percent = result.similarity || (Math.floor(Math.random() * 21) + 80);
-            const similarityText = result.similarityText ? ` (${result.similarityText})` : '';
+            const percent = result.similarity || (Math.floor(Math.random() * 21) + 80); // 서버에서 similarity 제공 시 사용
             const resultHTML = `
                 <div id="header"></div>
                 <div class="container-celebrity">
@@ -146,7 +144,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <img src="${result.image}" alt="${result.name}" class="celebrity-image">
                         <div class="analysis-text">
                             <b>${result.name}</b><br>
-                            <span style="color:#4b6cb7;font-weight:600;">닮은 정도: ${percent}%${similarityText}</span><br>
+                            <span style="color:#4b6cb7;font-weight:600;">닮은 정도: ${percent}%</span><br>
                             ${result.description}<br>
                         </div>
                         <div class="button-container">
@@ -165,23 +163,29 @@ document.addEventListener('DOMContentLoaded', () => {
                 loadComponent('footer.html', 'footer');
             }
         } else {
-            console.log('soulmate similarityText:', result.similarityText);
-            // soulmate 결과 카드 복구
-            const spouseImg = result.spouseImage || result.image || (type === 'husband' ? 'husband.png' : 'wife.png');
+            // soulmate 결과 카드 geniuscat 스타일
+            const desc = result;
+            let parsed;
+            try {
+                parsed = typeof desc === 'string' ? JSON.parse(desc) : desc;
+            } catch (e) {
+                parsed = { job: '', lookalike: '', mbti: '', personality: '', hobby: '', love_style: '', raw: desc };
+            }
             const resultHTML = `
                 <div id="header"></div>
                 <div class="container-soulmate">
                     <div class="fortune-teller">
                         <div class="result-card">
-                            <p class="subtitle">당신의 운명의 배우자✨</p>
-                            <img src="${spouseImg}" alt="미래의 ${type === 'husband' ? '남편' : '아내'}" class="spouse-image">
+                            <p class="subtitle">당신의 운명의 배우자입니다.✨</p>
+                            <img src="${result.image || ''}" alt="배우자와 닮은 연예인" class="spouse-image">
                             <div class="analysis-text">
-                              <b>직업:</b> ${result.job || ''}<br>
-                              <b>외모:</b> <span style="color:#4b6cb7;font-weight:600;">${result.lookalike || ''}</span>${result.similarityText ? ', ' + result.similarityText : ''}<br>
-                              <b>MBTI:</b> ${result.mbti || ''}<br>
-                              <b>성격:</b> ${result.personality || ''}<br>
-                              <b>취미:</b> ${result.hobby || ''}<br>
-                              <b>연애:</b> ${result.love_style || ''}<br>
+                                <b>직업:</b> ${parsed.job || ''}<br>
+                                <b>외모:</b> <span style="color:#4b6cb7;font-weight:600;">${parsed.lookalike || ''}</span><br>
+                                <b>MBTI:</b> ${parsed.mbti || ''}<br>
+                                <b>성격:</b> ${parsed.personality || ''}<br>
+                                <b>취미:</b> ${parsed.hobby || ''}<br>
+                                <b>연애스타일:</b> ${parsed.love_style || ''}<br>
+                                ${parsed.raw ? `<div style='margin-top:8px;color:#888;'>${parsed.raw}</div>` : ''}
                             </div>
                             <div class="button-container">
                                 <button class="share-button" onclick="shareLink()">
@@ -216,55 +220,4 @@ document.addEventListener('DOMContentLoaded', () => {
             alert('링크 복사에 실패했습니다. 다시 시도해주세요.');
         });
     };
-
-    function showError(message, errorCode) {
-        hideLoading();
-        const errorHTML = `
-            <div class="error-container">
-                <div class="error-message">
-                    <h3>😿 ${message}</h3>
-                    ${errorCode === 'INVALID_IMAGE' ? `
-                        <p>이미지 요구사항:</p>
-                        <ul>
-                            <li>최대 크기: 5MB</li>
-                            <li>지원 형식: JPG, PNG, WEBP</li>
-                        </ul>
-                    ` : ''}
-                    <button class="retry-button" onclick="location.reload()">다시 시도하기 🔄</button>
-                </div>
-            </div>
-        `;
-        document.body.innerHTML = errorHTML;
-    }
-
-    async function analyzeImage(imageData, type) {
-        try {
-            showLoading(type);
-            const response = await fetch('/analyze', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    imageData,
-                    analysisType: type
-                })
-            });
-
-            const data = await response.json();
-            
-            if (!response.ok) {
-                throw new Error(data.error || '분석 중 오류가 발생했습니다.');
-            }
-
-            if (data.result.error) {
-                throw new Error(data.result.error);
-            }
-
-            showResult(type, data.result);
-        } catch (error) {
-            console.error('분석 중 오류:', error);
-            showError(error.message, error.errorCode);
-        }
-    }
 }); 

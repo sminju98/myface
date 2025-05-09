@@ -324,7 +324,6 @@ header {
     display: flex;
     justify-content: center;
     align-items: center;
-    margin-top: 80px;
 }
 
 .fortune-teller-image {
@@ -1196,4 +1195,56 @@ html, body, .body-soulmate {
     margin: 0 !important;
     min-height: 100vh;
     box-sizing: border-box;
+}
+
+.error-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+    background: #f8f9fa;
+}
+
+.error-message {
+    background: white;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    max-width: 400px;
+    width: 100%;
+}
+
+.error-message h3 {
+    color: #dc3545;
+    margin-bottom: 20px;
+    font-size: 1.2rem;
+}
+
+.error-message ul {
+    text-align: left;
+    margin: 15px 0;
+    padding-left: 20px;
+}
+
+.error-message li {
+    color: #666;
+    margin: 5px 0;
+}
+
+.error-message .retry-button {
+    background: #4b6cb7;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    margin-top: 20px;
+    transition: background 0.3s;
+}
+
+.error-message .retry-button:hover {
+    background: #3a5a9f;
 } 

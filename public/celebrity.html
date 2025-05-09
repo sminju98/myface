@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>냥냥분석 - AI가 닮은 연예인을 찾아줍니다! ✨</title>
+    <link rel="icon" type="image/png" href="img/favicon.png">
+    <link rel="apple-touch-icon" href="img/favicon.png">
+    <meta name="theme-color" content="#4b6cb7">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        body.celebrity {
+            background: #e3eaff;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        .container-celebrity {
+            background: rgba(255,255,255,0.97);
+            border-radius: 30px;
+            box-shadow: 0 10px 30px rgba(76, 110, 245, 0.08);
+            max-width: 500px;
+            margin: 100px auto 32px auto;
+            padding: 2rem;
+            text-align: center;
+            flex: 1;
+        }
+        .subtitle-celebrity {
+            color: #4b6cb7;
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+        .description-celebrity {
+            color: #666;
+            font-size: 0.95rem;
+            margin-bottom: 2rem;
+        }
+        .celebrity-image {
+            width: 260px;
+            height: auto;
+            margin-bottom: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 4px 15px rgba(76, 110, 245, 0.08);
+        }
+        .upload-button.celebrity-button {
+            background: linear-gradient(45deg, #4b6cb7, #182848);
+        }
+    </style>
+</head>
+<body class="celebrity">
+    <div id="header"></div>
+    <div class="container-celebrity">
+        <div>
+            <p class="subtitle-celebrity">나랑 닮은 연예인✨</p>
+            <p class="description-celebrity">* 업로드한 이미지는 분석 후 즉시 삭제됩니다</p>
+        </div>
+        <div class="fortune-teller">
+            <img src="img/celebrity.png" alt="Celebrity Finder" class="celebrity-image">
+        </div>
+        <div class="upload-section">
+            <div class="button-group">
+                <label class="upload-button celebrity-button">
+                    <i class="fas fa-user"></i> 내 셀카 올리고 닮은 연예인 찾기 📸
+                    <input type="file" id="celebrity-photo-upload" accept="image/*" style="display: none;">
+                </label>
+            </div>
+        </div>
+    </div>
+    <div id="footer"></div>
+    <script src="components.js"></script>
+    <script src="script.js"></script>
+</body>
+</html> 
