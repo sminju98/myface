@@ -121,7 +121,7 @@ header {
 }
 
 .card-image { 
-    height: 160px;
+    height: 220px;
     background-position: center;
     background-size: cover;
     background-repeat: no-repeat;
@@ -140,7 +140,7 @@ header {
 }
 
 .card-content {
-    padding: 20px;
+    padding: 14px;
 }
 
 .card-title {
@@ -1247,4 +1247,28 @@ html, body, .body-soulmate {
 
 .error-message .retry-button:hover {
     background: #3a5a9f;
+}
+
+.save-image-button {
+    width: 100%;
+    padding: 1rem;
+    border: none;
+    border-radius: 50px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    background: linear-gradient(45deg, #4b6cb7, #35508a);
+    color: white;
+    transition: all 0.3s ease;
+    margin: 0;
+}
+
+.save-image-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    background: linear-gradient(45deg, #35508a, #4b6cb7);
 } 

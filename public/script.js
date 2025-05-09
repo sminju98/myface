@@ -13,6 +13,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // surgery 업로드 핸들러 추가
+    const surgeryInput = document.getElementById('surgery-photo-upload');
+    if (surgeryInput) {
+        surgeryInput.addEventListener('change', (e) => handlePhotoUpload(e.target.files[0], 'surgery'));
+    }
+
     function getApiUrl(type) {
         const base =
             (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
@@ -22,6 +28,8 @@ document.addEventListener('DOMContentLoaded', () => {
             return `${base}/analyze-celebrity`;
         } else if (type === 'animal') {
             return `${base}/analyze-animal`;
+        } else if (type === 'surgery') {
+            return `${base}/analyze-surgery`;
         } else {
             return `${base}/analyze-soulmate`;
         }
@@ -54,7 +62,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     });
                     if (!response.ok) throw new Error('API 호출 실패');
                     const data = await response.json();
-                    showResult(type, data.result || data);
+                    if (type === 'surgery') {
+                        showSurgeryResult(data.result || data, imageData);
+                    } else if (type === 'animal') {
+                        showAnimalResult(data.result || data);
+                    } else {
+                        showResult(type, data.result || data);
+                    }
                 } catch (err) {
                     alert('AI 분석에 실패했습니다. 다시 시도해 주세요.');
                     location.reload();
@@ -83,6 +97,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 '🐾 얼굴 특징을 분석 중...',
                 '🦊 다양한 동물상과 비교 중...',
                 '😺 귀여운 동물상 후보를 찾는 중...',
+                '✨ AI가 결과를 준비 중...'
+            ];
+        } else if (type === 'surgery') {
+            title = '성형 견적 분석 중...';
+            messages = [
+                '💉 얼굴 윤곽을 정밀 분석 중...',
+                '👃 코, 눈, 턱 등 개선 포인트 탐색 중...',
+                '💸 예상 견적을 계산 중...',
                 '✨ AI가 결과를 준비 중...'
             ];
         } else {
@@ -159,12 +181,13 @@ document.addEventListener('DOMContentLoaded', () => {
                             <span style="color:#4b6cb7;font-weight:600;">닮은 정도: ${percent}%${similarityText}</span><br>
                             ${result.description}<br>
                         </div>
-                        <div class="button-container">
-                            <button class="share-button" onclick="shareLink()">
-                                <i class="fas fa-link"></i> 링크로 공유하기
-                            </button>
-                            <button class="retry-button" onclick="location.reload()">다시 해보기 🔄</button>
-                        </div>
+                    </div>
+                    <div class="button-container">
+                        <button class="share-button" onclick="shareLink()">
+                            <i class="fas fa-link"></i> 링크로 공유하기
+                        </button>
+                        <button class="save-image-button" id="save-result-image">내 결과 이미지로 저장하기</button>
+                        <button class="retry-button" onclick="location.reload()">다시 해보기 🔄</button>
                     </div>
                 </div>
                 <div id="footer"></div>
@@ -193,13 +216,14 @@ document.addEventListener('DOMContentLoaded', () => {
                               <b>취미:</b> ${result.hobby || ''}<br>
                               <b>연애:</b> ${result.love_style || ''}<br>
                             </div>
-                            <div class="button-container">
-                                <button class="share-button" onclick="shareLink()">
-                                    <i class="fas fa-link"></i> 링크로 공유하기
-                                </button>
-                                <button class="retry-button" onclick="location.reload()">다시 해보기 🔄</button>
-                            </div>
                         </div>
+                    </div>
+                    <div class="button-container">
+                        <button class="share-button" onclick="shareLink()">
+                            <i class="fas fa-link"></i> 링크로 공유하기
+                        </button>
+                        <button class="save-image-button" id="save-result-image">내 결과 이미지로 저장하기</button>
+                        <button class="retry-button" onclick="location.reload()">다시 해보기 🔄</button>
                     </div>
                 </div>
                 <div id="footer"></div>
@@ -323,19 +347,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div id="header"></div>
                 <div class="container-animal">
                     <div class="result-card">
-                        <p class="subtitle-animal">나의 동물상 결과 🐾</p>
+                        <p class="subtitle">나의 동물상 결과 🐾</p>
                         <img src="${result.image || ''}" alt="${result.animal_type || ''}" class="animal-image">
                         <div class="analysis-text">
                             <b>동물상:</b> <span style="color:#4b6cb7;font-weight:600;">${result.animal_type || ''}</span><br>
                             <b>닮은 정도:</b> ${result.similarity || ''}%<br>
                             <b>설명:</b> ${result.description || ''}<br>
                         </div>
-                        <div class="button-container">
-                            <button class="share-button" onclick="shareLink()">
-                                <i class="fas fa-link"></i> 링크로 공유하기
-                            </button>
-                            <button class="retry-button" onclick="location.reload()">다시 해보기 🔄</button>
-                        </div>
+                    </div>
+                    <div class="button-container">
+                        <button class="share-button" onclick="shareLink()">
+                            <i class="fas fa-link"></i> 링크로 공유하기
+                        </button>
+                        <button class="save-image-button" id="save-result-image">내 결과 이미지로 저장하기</button>
+                        <button class="retry-button" onclick="location.reload()">다시 해보기 🔄</button>
                     </div>
                 </div>
                 <div id="footer"></div>
@@ -347,4 +372,91 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     }
+
+    function showSurgeryResult(result, imageData) {
+        hideLoading();
+        // summary
+        let summaryHtml = '';
+        if (result.summary) {
+            summaryHtml = `
+                <div class="surgery-summary" style="background:#f8f9fa;padding:1rem 1.2rem;border-radius:12px;margin-bottom:1.2rem;">
+                    <b>📸 얼굴 특징 분석 요약</b><br>
+                    <pre style="font-size:1rem;margin:0;color:#333;background:none;border:none;">${result.summary.replace(/\n/g, '<br>')}</pre>
+                </div>
+            `;
+        }
+        // recommend table
+        let recommendHtml = '';
+        if (Array.isArray(result.recommend) && result.recommend.length > 0 && typeof result.recommend[0] === 'object') {
+            recommendHtml = `<table class="surgery-table" style="margin:0 auto 1rem auto;min-width:200px;width:100%;max-width:400px;">
+                <thead><tr>
+                    <th>추천 시술</th><th>예상 비용 (만원)</th>
+                </tr></thead><tbody>`;
+            result.recommend.forEach(item => {
+                recommendHtml += `<tr>
+                    <td>${item.name || ''}</td>
+                    <td style="color:#ff6b6b;text-align:right;">${item.price || ''}</td>
+                </tr>`;
+            });
+            recommendHtml += '</tbody></table>';
+        } else if (typeof result.recommend === 'string') {
+            recommendHtml = `<div style="margin-bottom:1rem;"><b>추천 시술:</b> ${result.recommend}</div>`;
+        } else {
+            recommendHtml = `<div style="margin-bottom:1rem;color:#888;">추천 시술 정보가 없습니다.</div>`;
+        }
+        // feedback
+        let feedbackHtml = '';
+        if (result.feedback) {
+            feedbackHtml = `<div style="margin:1.2rem 0 0.5rem 0;font-size:1rem;"><b>📝 AI의 피드백</b><br>${result.feedback}</div>`;
+        }
+        // estimate
+        let estimateHtml = `<div style="font-size:1.2rem;font-weight:700;color:#ff6b6b;margin-top:1.2rem;">💳 예상 총 비용: ₩${result.estimate ? (result.estimate * 10000).toLocaleString() : ''}</div>`;
+
+        const resultHTML = `
+            <div id="header"></div>
+            <div class="container-surgery">
+                <div class="result-card">
+                    <p class="subtitle">내 얼굴 성형 견적 결과 💉</p>
+                    <img src="${imageData}" alt="내가 업로드한 사진" class="animal-image surgery-image" style="margin-bottom:1.5rem;max-width:320px;max-height:320px;width:100%;display:block;margin-left:auto;margin-right:auto;">
+                    ${summaryHtml}
+                    <div class="analysis-text" style="margin-bottom:1.5rem;">
+                        ${recommendHtml}
+                        ${estimateHtml}
+                        ${feedbackHtml}
+                    </div>
+                </div>
+                <div class="button-container">
+                    <button class="share-button" onclick="shareLink()">
+                        <i class="fas fa-link"></i> 링크로 공유하기
+                    </button>
+                    <button class="save-image-button" id="save-result-image">내 결과 이미지로 저장하기</button>
+                    <button class="retry-button" onclick="location.reload()">다시 해보기 🔄</button>
+                </div>
+            </div>
+            <div id="footer"></div>
+        `;
+        document.body.innerHTML = resultHTML;
+        if (typeof loadComponent === 'function') {
+            loadComponent('header.html', 'header');
+            loadComponent('footer.html', 'footer');
+        }
+    }
+
+    // 결과 이미지 저장 기능 (html2canvas 필요)
+    document.addEventListener('click', function(e) {
+        if (e.target && e.target.id === 'save-result-image') {
+            const card = document.querySelector('.result-card');
+            if (!card) return;
+            if (typeof html2canvas === 'undefined') {
+                alert('이미지 저장 기능을 사용하려면 html2canvas 라이브러리가 필요합니다.');
+                return;
+            }
+            html2canvas(card, {backgroundColor: '#fff'}).then(canvas => {
+                const link = document.createElement('a');
+                link.download = 'myface_result.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            });
+        }
+    });
 }); 

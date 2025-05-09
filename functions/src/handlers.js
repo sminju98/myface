@@ -403,11 +403,92 @@ async function analyzeAnimal(req, res) {
   }
 }
 
+async function analyzeSurgery(req, res) {
+  try {
+    const { imageData } = req.body;
+
+    if (!imageData) {
+      return res.status(400).json({ 
+        error: '이미지가 없습니다.',
+        errorCode: 'NO_IMAGE'
+      });
+    }
+
+    // 이미지 유효성 검사
+    try {
+      validateImage(imageData);
+    } catch (error) {
+      return res.status(400).json({ 
+        error: error.message,
+        errorCode: 'INVALID_IMAGE'
+      });
+    }
+
+    const prompt = `이 사진을 보고 AI 분석가처럼 아래 항목을 반드시 JSON 형식으로 반환해줘.\n- summary: 이마, 눈, 코, 턱선, 피부 등 각 부위별로 한 줄씩 요약해서 줄바꿈(\\n)으로 구분\n- recommend: 전체 얼굴을 보고 필요한 모든 추천 시술을 자유롭게 나열하되, 이미 괜찮거나 자연스러운 부위에는 굳이 성형을 권하지 말 것. 각 시술은 {name, description, price, type}를 포함한 배열로, type은 '성형' 또는 '피부과'로 구분 (예: [{ \"name\": \"이마 지방이식\", \"description\": \"납작한 이마에 볼륨감을 더함\", \"price\": 180, \"type\": \"성형\" }, { \"name\": \"레이저토닝\", \"description\": \"피부톤을 고르게 하고 광채를 부여\", \"price\": 30, \"type\": \"피부과\" }])\n- estimate: 예상 총 견적(만원 단위, 예: 210)\n- feedback: 유저의 외모 중 예쁜 부분을 칭찬하는 멘트로 작성 (자연스럽고 긍정적으로)\n피부과 시술(예: 레이저토닝, 물광주사, 필링 등)도 꼭 포함해줘.\n코드블록 없이 JSON만 반환해. 예시:\n{\n  \"summary\": \"이마: 볼륨감이 적당함\\n눈: 크고 또렷함\\n코: 오똑하고 균형잡힘\\n턱선: 갸름함\\n피부: 깨끗하고 밝음\",\n  \"recommend\": [\n    { \"name\": \"이마 지방이식\", \"description\": \"납작한 이마에 볼륨감을 더함\", \"price\": 180, \"type\": \"성형\" },\n    { \"name\": \"레이저토닝\", \"description\": \"피부톤을 고르게 하고 광채를 부여\", \"price\": 30, \"type\": \"피부과\" }\n  ],\n  \"estimate\": 210,\n  \"feedback\": \"눈이 정말 또렷하고 예뻐요!\"\n}`;
+
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "user",
+          content: [
+            { type: "text", text: prompt },
+            { type: "image_url", image_url: { url: imageData } }
+          ]
+        }
+      ],
+      max_tokens: 500,
+      temperature: 0.7
+    });
+
+    let content = completion.choices[0].message.content.trim();
+    if (content.startsWith('```')) {
+      content = content.replace(/```json|```/g, '').trim();
+    }
+    let result;
+    try {
+      result = JSON.parse(content);
+    } catch (e) {
+      result = {
+        summary: "이마: 약간 납작한 편, 입체감은 다소 부족\n눈: 균형잡힌 속쌍꺼풀, 눈꼬리 살짝 아래\n코: 콧대가 부드럽고 자연스러움, 코끝은 둥글고 여성스러움\n턱선: 전체적으로 부드러운 라인, V라인이 살짝 부족\n피부톤: 깨끗하고 밝은 편, 피부결이 좋아 보임",
+        recommend: [
+          { part: "이마", name: "이마 지방이식", description: "납작한 인상을 보완하고 부드러운 인상 강조", price: 180, type: "성형" },
+          { part: "피부", name: "레이저토닝", description: "피부톤 균일화 + 광채 부여", price: 30, type: "피부과" }
+        ],
+        estimate: 210,
+        feedback: "당신은 이미 단정하고 신뢰감을 주는 인상이에요. 다만 약간의 입체감을 더하면 더 화사하고 선명한 분위기를 연출할 수 있답니다. 특히 이마와 코에 조금만 변화를 주면 인스타 셀카에서도 더 또렷하게 살아나는 얼굴이 될 거예요!"
+      };
+    }
+
+    // recommend table
+    let recommendHtml = '';
+    if (Array.isArray(result.recommend) && result.recommend.length > 0 && typeof result.recommend[0] === 'object') {
+        recommendHtml = `<table class="surgery-table" style="margin:0 auto 1rem auto;min-width:200px;width:100%;max-width:400px;">
+            <thead><tr>
+                <th>추천 시술</th><th>예상 비용 (만원)</th>
+            </tr></thead><tbody>`;
+        result.recommend.forEach(item => {
+            recommendHtml += `<tr>
+                <td>${item.name || ''}</td>
+                <td style="color:#ff6b6b;text-align:right;">${item.price || ''}</td>
+            </tr>`;
+        });
+        recommendHtml += '</tbody></table>';
+    }
+
+    res.json({ result });
+  } catch (error) {
+    console.error('성형 견적 분석 중 오류:', error);
+    res.status(500).json({ error: '분석 중 오류가 발생했습니다.' });
+  }
+}
+
 module.exports = {
   analyzeImage,
   generateSilhouette,
   analyzeCelebrity,
   getImage,
   getWikipediaImage,
-  analyzeAnimal
+  analyzeAnimal,
+  analyzeSurgery
 }; 
