@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>냥냥분석 - 나는 어떤 동물상일까? 🐾</title>
+    <link rel="icon" type="image/png" href="img/favicon.png">
+    <link rel="apple-touch-icon" href="img/favicon.png">
+    <meta name="theme-color" content="#4b6cb7">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        body.animal {
+            background: #f8f9fa;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .container-animal {
+            background: rgba(255,255,255,0.97);
+            border-radius: 30px;
+            box-shadow: 0 10px 30px rgba(76, 110, 245, 0.08);
+            max-width: 500px;
+            margin: 100px auto 32px auto;
+            padding: 2rem;
+            text-align: center;
+            flex: 1;
+        }
+        .subtitle-animal {
+            color: #4b6cb7;
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+        .description-animal {
+            color: #666;
+            font-size: 0.95rem;
+            margin-bottom: 2rem;
+        }
+        .animal-image {
+            width: 220px;
+            height: 220px;
+            object-fit: cover;
+            margin-bottom: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 4px 15px rgba(76, 110, 245, 0.08);
+        }
+        .upload-button.animal-button {
+            background: linear-gradient(45deg, #51cf66, #4b6cb7);
+        }
+        .cute-animal-image-wrapper {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+        }
+        .cute-animal-image {
+            width: 300px;
+            height: 300px;
+            object-fit: cover;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.10);
+            background: none;
+            padding: 0;
+            margin-bottom: 2rem;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+            transition: transform 0.2s;
+        }
+        .cute-animal-image:hover {
+            transform: scale(1.08) rotate(-5deg);
+        }
+    </style>
+</head>
+<body class="animal">
+    <div id="header"></div>
+    <div class="container-animal">
+        <div>
+            <p class="subtitle-animal">나는 어떤 동물상일까? 🐾</p>
+            <p class="description-animal">* 내 얼굴을 올리면 AI가 닮은 동물상을 분석해줍니다.<br>* 업로드한 이미지는 분석 후 즉시 삭제됩니다.</p>
+        </div>
+        <div class="cute-animal-image-wrapper">
+            <img src="img/cute-animal.png" alt="귀여운 동물 캐릭터" class="cute-animal-image">
+        </div>
+        <div class="upload-section">
+            <div class="button-group">
+                <label class="upload-button animal-button">
+                    <i class="fas fa-paw"></i> 내 얼굴로 동물상 알아보기 🐶🐱
+                    <input type="file" id="animal-photo-upload" accept="image/*" style="display: none;">
+                </label>
+            </div>
+        </div>
+    </div>
+    <div id="footer"></div>
+    <script src="components.js"></script>
+    <script src="script.js"></script>
+</body>
+</html> 

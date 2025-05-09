@@ -5,6 +5,16 @@
       "firebase.json",
       "**/.*",
       "**/node_modules/**"
+    ],
+    "redirects": [
+      {
+        "source": "/**",
+        "destination": "https://www.geniuscat.co.kr/:splat",
+        "type": 301,
+        "condition": {
+          "hostname": "geniuscat.co.kr"
+        }
+      }
     ]
   },
   "functions": {

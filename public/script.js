@@ -20,6 +20,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 : 'https://us-central1-myface-837d6.cloudfunctions.net/api';
         if (type === 'celebrity') {
             return `${base}/analyze-celebrity`;
+        } else if (type === 'animal') {
+            return `${base}/analyze-animal`;
         } else {
             return `${base}/analyze-soulmate`;
         }
@@ -74,6 +76,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 '👀 눈, 코, 입의 특징을 파악 중...',
                 '🎬 연예인 데이터와 비교 중...',
                 '✨ 최적의 닮은꼴을 찾고 있어요...'
+            ];
+        } else if (type === 'animal') {
+            title = '동물상 분석 중...';
+            messages = [
+                '🐾 얼굴 특징을 분석 중...',
+                '🦊 다양한 동물상과 비교 중...',
+                '😺 귀여운 동물상 후보를 찾는 중...',
+                '✨ AI가 결과를 준비 중...'
             ];
         } else {
             title = '운명의 배우자를 점치는 중...';
@@ -265,6 +275,76 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             console.error('분석 중 오류:', error);
             showError(error.message, error.errorCode);
+        }
+    }
+
+    // === 나는 어떤 동물상일까 (animal.html) 전용 ===
+    if (document.body.classList.contains('animal')) {
+        const animalInput = document.getElementById('animal-photo-upload');
+        if (animalInput) {
+            animalInput.addEventListener('change', (e) => handleAnimalPhotoUpload(e.target.files[0]));
+        }
+
+        function handleAnimalPhotoUpload(file) {
+            if (!file) return;
+            if (!file.type.startsWith('image/')) {
+                alert('이미지 파일만 업로드 가능합니다.');
+                return;
+            }
+            if (file.size > 10 * 1024 * 1024) {
+                alert('파일 크기가 너무 큽니다. 10MB 이하의 파일을 업로드해주세요.');
+                return;
+            }
+            showLoading('animal');
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                const imageData = e.target.result;
+                try {
+                    const apiUrl = getApiUrl('animal');
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ imageData })
+                    });
+                    if (!response.ok) throw new Error('AI 분석 실패');
+                    const data = await response.json();
+                    showAnimalResult(data.result || data);
+                } catch (err) {
+                    alert('AI 분석에 실패했습니다. 다시 시도해 주세요.');
+                    location.reload();
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function showAnimalResult(result) {
+            hideLoading();
+            const resultHTML = `
+                <div id="header"></div>
+                <div class="container-animal">
+                    <div class="result-card">
+                        <p class="subtitle-animal">나의 동물상 결과 🐾</p>
+                        <img src="${result.image || ''}" alt="${result.animal_type || ''}" class="animal-image">
+                        <div class="analysis-text">
+                            <b>동물상:</b> <span style="color:#4b6cb7;font-weight:600;">${result.animal_type || ''}</span><br>
+                            <b>닮은 정도:</b> ${result.similarity || ''}%<br>
+                            <b>설명:</b> ${result.description || ''}<br>
+                        </div>
+                        <div class="button-container">
+                            <button class="share-button" onclick="shareLink()">
+                                <i class="fas fa-link"></i> 링크로 공유하기
+                            </button>
+                            <button class="retry-button" onclick="location.reload()">다시 해보기 🔄</button>
+                        </div>
+                    </div>
+                </div>
+                <div id="footer"></div>
+            `;
+            document.body.innerHTML = resultHTML;
+            if (typeof loadComponent === 'function') {
+                loadComponent('header.html', 'header');
+                loadComponent('footer.html', 'footer');
+            }
         }
     }
 }); 

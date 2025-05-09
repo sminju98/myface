@@ -6,7 +6,7 @@ const functions = require('firebase-functions');
 const express = require('express');
 const OpenAI = require('openai');
 const cors = require('cors');
-const { analyzeImage, getFunnySimilarityText, getCelebrityImage, analyzeCelebrity } = require('./src/handlers');
+const { analyzeImage, getFunnySimilarityText, getImage, analyzeCelebrity, analyzeAnimal } = require('./src/handlers');
 const axios = require('axios');
 
 const app = express();
@@ -21,6 +21,10 @@ const openai = new OpenAI({
 app.post('/analyze-celebrity', analyzeCelebrity);
 
 app.post('/analyze-image', analyzeImage);
+// 운명의 배우자 엔드포인트
 app.post('/analyze-soulmate', analyzeImage);
+
+// 동물상 분석 엔드포인트
+app.post('/analyze-animal', analyzeAnimal);
 
 exports.api = functions.https.onRequest(app); 

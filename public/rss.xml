@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<rss version="2.0">
+  <channel>
+    <title>지니어스캣</title>
+    <link>https://www.geniuscat.co.kr/</link>
+    <description>지니어스캣의 최신 소식과 업데이트</description>
+    <language>ko</language>
+    <item>
+      <title>홈</title>
+      <link>https://www.geniuscat.co.kr/</link>
+      <description>지니어스캣 메인 페이지</description>
+      <pubDate>Mon, 10 Jun 2024 12:00:00 +0900</pubDate>
+    </item>
+    <item>
+      <title>동물상 테스트</title>
+      <link>https://www.geniuscat.co.kr/animal.html</link>
+      <description>동물상 테스트 페이지</description>
+      <pubDate>Mon, 10 Jun 2024 12:00:00 +0900</pubDate>
+    </item>
+    <item>
+      <title>운명의 배우자 테스트</title>
+      <link>https://www.geniuscat.co.kr/soulmate.html</link>
+      <description>운명의 배우자 테스트 페이지</description>
+      <pubDate>Mon, 10 Jun 2024 12:00:00 +0900</pubDate>
+    </item>
+    <item>
+      <title>닮은꼴 연예인 테스트</title>
+      <link>https://www.geniuscat.co.kr/celebrity.html</link>
+      <description>닮은꼴 연예인 테스트 페이지</description>
+      <pubDate>Mon, 10 Jun 2024 12:00:00 +0900</pubDate>
+    </item>
+  </channel>
+</rss> 

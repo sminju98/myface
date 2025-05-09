@@ -99,7 +99,7 @@ async function analyzeImage(req, res) {
         const celebMatch = parsed.lookalike.match(/[가-힣]{2,}/);
         const celebName = celebMatch ? celebMatch[0] : '';
         if (celebName) {
-          const imageUrl = await getCelebrityImage(celebName);
+          const imageUrl = await getImage(celebName);
           parsed.image = imageUrl;
           if (analysisType === 'husband' || analysisType === 'wife') {
             parsed.spouseImage = imageUrl;
@@ -144,7 +144,7 @@ function getSpouseGenderSpecificPrompt(spouseGender) {
   } else {
     spouseTarget = '닮은꼴(연예인, 유튜버, 인플루언서 등 유명인 중 한 명)';
   }
-  return `이 사진을 바탕으로 아래 항목을 반드시 JSON 형식으로 반환해. 각 항목은 한 줄로 써줘.\n- job: 직업 (예: 의사 등 의료계열, 바리스타 등 커피 업종 등)\n- lookalike: ${spouseTarget}, 예: 차은우\n- similarity: 닮은 정도 (0~100 사이의 숫자, 예: 94)\n- mbti: MBTI (예: ENTP)\n- personality: 성격 (한 문장, 단순하게)\n- hobby: 취미 (한 문장, 단순하게)\n- love_style: 연애스타일 (한 문장, 단순하게)\n코드블록 없이 JSON만 반환해. 예시:\n{\n  \"job\": \"의사 등 의료계열\",\n  \"lookalike\": \"차은우\",\n  \"similarity\": 94,\n  \"mbti\": \"ENTP\",\n  \"personality\": \"호기심 많고 유쾌함\",\n  \"hobby\": \"카페 투어를 즐김\",\n  \"love_style\": \"티 안 내지만 은근히 챙겨주는 스타일\"\n}`;
+  return `이 사진을 바탕으로 아래 항목을 반드시 JSON 형식으로 반환해. 각 항목은 한 줄로 써줘.\n- job: 직업 (예: 의사 등 의료계열, 바리스타 등 커피 업종 등)\n- job_group: 대표적인 직업군 중 하나 (IT/개발, 디자인/예술, 교육/연구, 의료/보건, 서비스/요식업, 영업/마케팅, 금융/회계, 공무원/공공기관, 미디어/방송, 기타)\n- lookalike: ${spouseTarget}, 예: 차은우\n- similarity: 닮은 정도 (0~100 사이의 숫자, 예: 94)\n- mbti: MBTI (예: ENTP)\n- personality: 성격 (한 문장, 단순하게)\n- hobby: 취미 (한 문장, 단순하게)\n- love_style: 연애스타일 (한 문장, 단순하게)\n코드블록 없이 JSON만 반환해. 예시:\n{\n  \"job\": \"의사 등 의료계열\",\n  \"job_group\": \"의료/보건\",\n  \"lookalike\": \"차은우\",\n  \"similarity\": 94,\n  \"mbti\": \"ENTP\",\n  \"personality\": \"호기심 많고 유쾌함\",\n  \"hobby\": \"카페 투어를 즐김\",\n  \"love_style\": \"티 안 내지만 은근히 챙겨주는 스타일\"\n}`;
 }
 
 async function analyzeCelebrity(req, res) {
@@ -181,7 +181,7 @@ async function analyzeCelebrity(req, res) {
     }
     // Google 이미지 검색으로 실제 이미지 URL 보정
     if (result.name) {
-      const googleImage = await getCelebrityImage(result.name);
+      const googleImage = await getImage(result.name);
       if (googleImage) result.image = googleImage;
     }
     // description을 similarity 점수로 항상 생성
@@ -199,7 +199,7 @@ async function analyzeCelebrity(req, res) {
   }
 }
 
-async function getCelebrityImage(celebrityName) {
+async function getImage(celebrityName) {
   // 1. 위키피디아 대표 이미지 우선 시도
   const wikiImage = await getWikipediaImage(celebrityName);
   if (wikiImage) return wikiImage;
@@ -320,10 +320,94 @@ function getFunnySimilarityText(percent) {
   return "조금 닮은 것 같기도...?";
 }
 
+async function analyzeAnimal(req, res) {
+  try {
+    const { imageData } = req.body;
+
+    if (!imageData) {
+      return res.status(400).json({ 
+        error: '이미지가 없습니다.',
+        errorCode: 'NO_IMAGE'
+      });
+    }
+
+    // 이미지 유효성 검사
+    try {
+      validateImage(imageData);
+    } catch (error) {
+      return res.status(400).json({ 
+        error: error.message,
+        errorCode: 'INVALID_IMAGE'
+      });
+    }
+
+    const prompt = `이 사진을 보고 아래 항목을 반드시 JSON 형식으로 반환해.
+- animal_type: 닮은 동물상 (고양이상, 강아지상, 여우상, 곰상, 토끼상, 사슴상, 늑대상, 판다상, 호랑이상, 사자상, 다람쥐상, 햄스터상, 부엉이상, 펭귄상, 원숭이상, 돼지상, 악어상, 코끼리상, 말상, 양상, 치타상, 수달상, 라쿤상 등 중 하나)
+- similarity: 닮은 정도 (0~100 사이의 숫자)
+- description: 해당 동물상에 대한 한 문장 설명 (예: "귀엽고 호기심 많은 성격")
+코드블록 없이 JSON만 반환해. 예시:
+{
+  "animal_type": "라쿤상",
+  "similarity": 88,
+  "description": "장난기 많고 영리한 매력의 소유자"
+}`;
+
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "user",
+          content: [
+            { type: "text", text: prompt },
+            { type: "image_url", image_url: { url: imageData } }
+          ]
+        }
+      ],
+      max_tokens: 500,
+      temperature: 0.7
+    });
+
+    let content = completion.choices[0].message.content.trim();
+    if (content.startsWith('```')) {
+      content = content.replace(/```json|```/g, '').trim();
+    }
+    let result;
+    try {
+      result = JSON.parse(content);
+    } catch (e) {
+      result = {
+        animal_type: "고양이상",
+        similarity: Math.floor(Math.random() * 51) + 50,
+        description: "귀엽고 호기심 많은 성격"
+      };
+    }
+
+    // 동물 이미지 검색
+    try {
+      const animalName = result.animal_type.replace('상', '');
+      const imageUrl = await getImage(animalName);
+      if (imageUrl) {
+        result.image = imageUrl;
+      } else {
+        result.image = "https://images.unsplash.com/photo-1518717758536-85ae29035b6d"; // 기본 이미지
+      }
+    } catch (error) {
+      console.error('동물 이미지 검색 실패:', error);
+      result.image = "https://images.unsplash.com/photo-1518717758536-85ae29035b6d"; // 기본 이미지
+    }
+
+    res.json({ result });
+  } catch (error) {
+    console.error('동물상 분석 중 오류:', error);
+    res.status(500).json({ error: '분석 중 오류가 발생했습니다.' });
+  }
+}
+
 module.exports = {
   analyzeImage,
   generateSilhouette,
   analyzeCelebrity,
-  getCelebrityImage,
-  getWikipediaImage
+  getImage,
+  getWikipediaImage,
+  analyzeAnimal
 }; 
