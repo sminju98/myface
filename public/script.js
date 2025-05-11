@@ -347,7 +347,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div id="header"></div>
                 <div class="container-animal">
                     <div class="result-card">
-                        <p class="subtitle">나의 동물상 결과 🐾</p>
+                        <p class="subtitle-animal">나의 동물상 결과 🐾</p>
                         <img src="${result.image || ''}" alt="${result.animal_type || ''}" class="animal-image">
                         <div class="analysis-text">
                             <b>동물상:</b> <span style="color:#4b6cb7;font-weight:600;">${result.animal_type || ''}</span><br>
@@ -375,16 +375,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function showSurgeryResult(result, imageData) {
         hideLoading();
-        // summary
-        let summaryHtml = '';
-        if (result.summary) {
-            summaryHtml = `
-                <div class="surgery-summary" style="background:#f8f9fa;padding:1rem 1.2rem;border-radius:12px;margin-bottom:1.2rem;">
-                    <b>📸 얼굴 특징 분석 요약</b><br>
-                    <pre style="font-size:1rem;margin:0;color:#333;background:none;border:none;">${result.summary.replace(/\n/g, '<br>')}</pre>
-                </div>
-            `;
-        }
         // recommend table
         let recommendHtml = '';
         if (Array.isArray(result.recommend) && result.recommend.length > 0 && typeof result.recommend[0] === 'object') {
@@ -418,7 +408,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="result-card">
                     <p class="subtitle">내 얼굴 성형 견적 결과 💉</p>
                     <img src="${imageData}" alt="내가 업로드한 사진" class="animal-image surgery-image" style="margin-bottom:1.5rem;max-width:320px;max-height:320px;width:100%;display:block;margin-left:auto;margin-right:auto;">
-                    ${summaryHtml}
                     <div class="analysis-text" style="margin-bottom:1.5rem;">
                         ${recommendHtml}
                         ${estimateHtml}

@@ -81,6 +81,7 @@ async function analyzeImage(req, res) {
     try {
       parsed = typeof result === 'string' ? JSON.parse(result) : result;
     } catch (e) {
+      console.error('OpenAI 응답 파싱 실패:', result); // 원본 응답 로그
       parsed = { 
         job: '', 
         lookalike: '', 
@@ -89,21 +90,21 @@ async function analyzeImage(req, res) {
         hobby: '', 
         love_style: '', 
         raw: result,
-        error: '결과 파싱에 실패했습니다.'
+        error: 'AI 응답 파싱 실패'
       };
     }
 
     // lookalike(닮은 연예인) 항목이 있으면 이미지 검색
     if (parsed.lookalike) {
       try {
-        const celebMatch = parsed.lookalike.match(/[가-힣]{2,}/);
-        const celebName = celebMatch ? celebMatch[0] : '';
-        if (celebName) {
+      const celebMatch = parsed.lookalike.match(/[가-힣]{2,}/);
+      const celebName = celebMatch ? celebMatch[0] : '';
+      if (celebName) {
           const imageUrl = await getImage(celebName);
-          parsed.image = imageUrl;
-          if (analysisType === 'husband' || analysisType === 'wife') {
-            parsed.spouseImage = imageUrl;
-          }
+        parsed.image = imageUrl;
+        if (analysisType === 'husband' || analysisType === 'wife') {
+          parsed.spouseImage = imageUrl;
+        }
         }
       } catch (error) {
         console.error('이미지 검색 실패:', error);
@@ -138,9 +139,9 @@ function generateSilhouette(req, res) {
 function getSpouseGenderSpecificPrompt(spouseGender) {
   let spouseTarget = '';
   if (spouseGender === 'husband') {
-    spouseTarget = '미래 남편(이성)의 닮은꼴(반드시 남자 연예인, 유튜버, 인플루언서 등 남성 유명인 중 한 명만, 여자 연예인/여성 유명인은 절대 넣지 마세요)';
+    spouseTarget = '미래 남편(이성)의 닮은꼴(반드시 남자 연예인, 유튜버, 인플루언서 등 남성 유명인 중 한 명만, 여자 연예인/여성 유명인은 절대 넣지 마세요. 못생기거나 평범하게 생긴 연예인도 포함하세요.)';
   } else if (spouseGender === 'wife') {
-    spouseTarget = '미래 아내(이성)의 닮은꼴(반드시 여자 연예인, 유튜버, 인플루언서 등 여성 유명인 중 한 명만, 남자 연예인/남성 유명인은 절대 넣지 마세요)';
+    spouseTarget = '미래 아내(이성)의 닮은꼴(반드시 여자 연예인, 유튜버, 인플루언서 등 여성 유명인 중 한 명만, 남자 연예인/남성 유명인은 절대 넣지 마세요. 못생기거나 평범하게 생긴 연예인도 포함하세요.)';
   } else {
     spouseTarget = '닮은꼴(연예인, 유튜버, 인플루언서 등 유명인 중 한 명)';
   }
@@ -150,7 +151,18 @@ function getSpouseGenderSpecificPrompt(spouseGender) {
 async function analyzeCelebrity(req, res) {
   const { imageData } = req.body;
   try {
-    const prompt = `이 사진과 가장 닮은 실제 한국 연예인, 유튜버, 인플루언서 등 유명인(외모가 평범하거나 개성 있는 인물도 포함) 중 한 명을 아래 JSON 형식으로 반환해줘.\n- 반드시 실제 인물 이름과 닮은 정도(0~100%)만 반환해.\n- '없음', '특정할 수 없음' 등으로 답하지 말고, 무조건 실제 인물 이름을 써줘.\n- 코드블록(\`\`\`) 없이 JSON만 반환해.\n\n예시:\n{\n  \"name\": \"유재석\",\n  \"similarity\": 87\n}`;
+    const prompt = `이 사진과 가장 닮은 실제 한국 연예인, 유튜버, 인플루언서 등 유명인을 찾아서 아래 JSON 형식으로 반환해줘. 
+- 예쁘거나 잘생긴 사용자는 예쁘거나 잘생긴 연예인으로 찾고 못생긴 사용자는 못생긴 연예인으로 찾아줘.
+- 외모가 평범하거나 못생기거나 개성 있는 인물도 포함해서 찾아줘.
+- 닮은 정도는 0~100%로 표현하되, 실제로 닮은 정도보다 10~20% 정도 낮게 평가해줘.
+- '없음', '특정할 수 없음' 등으로 답하지 말고, 무조건 실제 인물 이름을 써줘.
+- 코드블록(\`\`\`) 없이 JSON만 반환해.
+
+예시:
+{
+  "name": "유재석",
+  "similarity": 65
+}`;
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
@@ -163,7 +175,7 @@ async function analyzeCelebrity(req, res) {
         }
       ],
       max_tokens: 500,
-      temperature: 0.7
+      temperature: 1.2
     });
     let content = completion.choices[0].message.content.trim();
     if (content.startsWith('```')) {
@@ -173,6 +185,7 @@ async function analyzeCelebrity(req, res) {
     try {
       result = JSON.parse(content);
     } catch (e) {
+      console.error('OpenAI 응답 파싱 실패:', content); // 원본 응답 로그
       result = {
         name: "알 수 없음",
         image: "",
@@ -312,12 +325,82 @@ async function getWikipediaImage(celebrityName) {
 }
 
 function getFunnySimilarityText(percent) {
-  if (percent >= 90) return "쌍둥이처럼 닮았어요!";
-  if (percent >= 80) return "가족도 헷갈릴 정도로 닮았어요!";
-  if (percent >= 70) return "KTX 타고 가면서 보면 닮았어요!";
-  if (percent >= 60) return "억울하게 닮았어요!";
-  if (percent >= 50) return "어딘가 분위기가 비슷해요!";
-  return "조금 닮은 것 같기도...?";
+  const prompts = [
+    // 90% 이상
+    {
+      min: 90,
+      texts: [
+        "쌍둥이도 이 정도는 아닐 거예요!",
+        "DNA 검사해도 이 정도는 안 나올 거예요!",
+        "가족도 헷갈릴 정도로 닮았어요!",
+        "본인도 헷갈릴 정도로 닮았어요!",
+        "이 정도면 닮은꼴 대회 1등감이에요!"
+      ]
+    },
+    // 80-89%
+    {
+      min: 80,
+      texts: [
+        "KTX 타고 가면서 보면 닮았어요!",
+        "지하철에서 우연히 마주치면 헷갈릴 거예요!",
+        "이 정도면 닮은꼴 대회 출전 가능해요!",
+        "가족들도 인정하는 닮은꼴이에요!",
+        "본인도 인정하는 닮은꼴이에요!"
+      ]
+    },
+    // 70-79%
+    {
+      min: 70,
+      texts: [
+        "억울하게 닮았어요!",
+        "이 정도면 닮은꼴이라고 해도 될 것 같아요!",
+        "분위기가 비슷해서 닮아 보여요!",
+        "특정 각도에서 보면 닮았어요!",
+        "옆모습이 특히 닮았어요!"
+      ]
+    },
+    // 60-69%
+    {
+      min: 60,
+      texts: [
+        "어딘가 분위기가 비슷해요!",
+        "특정 표정에서 닮은 점이 보여요!",
+        "눈빛이 비슷해요!",
+        "웃을 때 닮은 점이 보여요!",
+        "분위기가 닮았어요!"
+      ]
+    },
+    // 50-59%
+    {
+      min: 50,
+      texts: [
+        "조금 닮은 것 같기도...?",
+        "분위기만 비슷한 것 같아요!",
+        "특정 각도에서만 닮아 보여요!",
+        "눈빛만 비슷한 것 같아요!",
+        "웃을 때만 닮은 것 같아요!"
+      ]
+    },
+    // 50% 미만
+    {
+      min: 0,
+      texts: [
+        "음... 닮은 점을 찾아보는 중이에요!",
+        "분위기가 조금 비슷한 것 같아요!",
+        "특정 표정에서 닮은 점이 보여요!",
+        "눈빛이 조금 비슷해요!",
+        "웃을 때 조금 닮은 것 같아요!"
+      ]
+    }
+  ];
+
+  // 해당하는 범위의 텍스트 배열 찾기
+  const range = prompts.find(p => percent >= p.min);
+  if (!range) return "음... 닮은 점을 찾아보는 중이에요!";
+
+  // 랜덤하게 텍스트 선택
+  const randomIndex = Math.floor(Math.random() * range.texts.length);
+  return range.texts[randomIndex];
 }
 
 async function analyzeAnimal(req, res) {
@@ -364,7 +447,7 @@ async function analyzeAnimal(req, res) {
         }
       ],
       max_tokens: 500,
-      temperature: 0.7
+      temperature: 1.2
     });
 
     let content = completion.choices[0].message.content.trim();
@@ -424,59 +507,92 @@ async function analyzeSurgery(req, res) {
       });
     }
 
-    const prompt = `이 사진을 보고 AI 분석가처럼 아래 항목을 반드시 JSON 형식으로 반환해줘.\n- summary: 이마, 눈, 코, 턱선, 피부 등 각 부위별로 한 줄씩 요약해서 줄바꿈(\\n)으로 구분\n- recommend: 전체 얼굴을 보고 필요한 모든 추천 시술을 자유롭게 나열하되, 이미 괜찮거나 자연스러운 부위에는 굳이 성형을 권하지 말 것. 각 시술은 {name, description, price, type}를 포함한 배열로, type은 '성형' 또는 '피부과'로 구분 (예: [{ \"name\": \"이마 지방이식\", \"description\": \"납작한 이마에 볼륨감을 더함\", \"price\": 180, \"type\": \"성형\" }, { \"name\": \"레이저토닝\", \"description\": \"피부톤을 고르게 하고 광채를 부여\", \"price\": 30, \"type\": \"피부과\" }])\n- estimate: 예상 총 견적(만원 단위, 예: 210)\n- feedback: 유저의 외모 중 예쁜 부분을 칭찬하는 멘트로 작성 (자연스럽고 긍정적으로)\n피부과 시술(예: 레이저토닝, 물광주사, 필링 등)도 꼭 포함해줘.\n코드블록 없이 JSON만 반환해. 예시:\n{\n  \"summary\": \"이마: 볼륨감이 적당함\\n눈: 크고 또렷함\\n코: 오똑하고 균형잡힘\\n턱선: 갸름함\\n피부: 깨끗하고 밝음\",\n  \"recommend\": [\n    { \"name\": \"이마 지방이식\", \"description\": \"납작한 이마에 볼륨감을 더함\", \"price\": 180, \"type\": \"성형\" },\n    { \"name\": \"레이저토닝\", \"description\": \"피부톤을 고르게 하고 광채를 부여\", \"price\": 30, \"type\": \"피부과\" }\n  ],\n  \"estimate\": 210,\n  \"feedback\": \"눈이 정말 또렷하고 예뻐요!\"\n}`;
+    const prompt = `당신은 20년 경력의 성형외과 전문의입니다. 고객에게 성형 상담을 해주어야 합니다.
 
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        {
-          role: "user",
-          content: [
-            { type: "text", text: prompt },
-            { type: "image_url", image_url: { url: imageData } }
-          ]
-        }
-      ],
-      max_tokens: 500,
-      temperature: 0.7
-    });
+- 수익을 최대화해야 하므로, 조금이라도 개선 여지가 보이면 적극적으로 성형을 권장하세요.
+- 단, 고객이 미인인 경우에는 성형은 지양하고, 가벼운 피부과 시술 0~2개 정도만 추천하세요.
+- 이미 예쁘거나 잘생긴 부위에는 성형을 권하지 말고, 자연스러운 아름다움을 유지하라고 안내하세요.
+- 고객의 외모에서 개선이 필요한 부분에만 성형 또는 피부과 시술을 추천하세요.
+- 추천 항목은 총 10개 미만으로 제한하세요 (최대 9개).
+- 고객이 보통 외모거나 개선 여지가 많다면, 총 견적은 가능한 한 높게 설정하세요 (최소 1,000만원 이상 권장).
+- 시술 가격은 현실적이어야 합니다. 비정상적인 가격을 책정하지마세요.
+- 일반적인 시술 가격 범위:
+  * 보톡스: 10~30만원
+  * 필러: 30~100만원
+  * 레이저 시술: 20~50만원
+  * 눈 성형: 200~400만원
+  * 코 성형: 300~500만원
+  * 턱 성형: 300~500만원
+  * 광대 축소: 200~400만원
+  * 지방흡입: 200~400만원
+  * 리프팅: 300~500만원
 
-    let content = completion.choices[0].message.content.trim();
-    if (content.startsWith('```')) {
-      content = content.replace(/```json|```/g, '').trim();
-    }
-    let result;
+- recommend는 반드시 각 시술을 아래와 같은 객체 배열로 반환 (문자열 배열 금지)
+예시:
+"recommend": [
+  { "name": "턱 보톡스", "description": "턱 근육 축소로 갸름한 턱선", "price": 20, "type": "성형" },
+  { "name": "피부 리프팅", "description": "탄력 개선 및 주름 완화", "price": 300, "type": "피부과" }
+]
+- estimate: 총 견적(만원)
+- feedback: 총체적 평가 한 줄
+
+코드블록, 설명, 예시, 기타 텍스트 절대 넣지 말고, JSON만 반환해.`;
+
     try {
-      result = JSON.parse(content);
-    } catch (e) {
-      result = {
-        summary: "이마: 약간 납작한 편, 입체감은 다소 부족\n눈: 균형잡힌 속쌍꺼풀, 눈꼬리 살짝 아래\n코: 콧대가 부드럽고 자연스러움, 코끝은 둥글고 여성스러움\n턱선: 전체적으로 부드러운 라인, V라인이 살짝 부족\n피부톤: 깨끗하고 밝은 편, 피부결이 좋아 보임",
-        recommend: [
-          { part: "이마", name: "이마 지방이식", description: "납작한 인상을 보완하고 부드러운 인상 강조", price: 180, type: "성형" },
-          { part: "피부", name: "레이저토닝", description: "피부톤 균일화 + 광채 부여", price: 30, type: "피부과" }
-        ],
-        estimate: 210,
-        feedback: "당신은 이미 단정하고 신뢰감을 주는 인상이에요. 다만 약간의 입체감을 더하면 더 화사하고 선명한 분위기를 연출할 수 있답니다. 특히 이마와 코에 조금만 변화를 주면 인스타 셀카에서도 더 또렷하게 살아나는 얼굴이 될 거예요!"
-      };
-    }
+      console.log('OpenAI API 호출 시작');
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        temperature: 0.9,
+        max_tokens: 1500,
+        messages: [
+          {
+            role: "user",
+            content: [
+              { type: "text", text: prompt },
+              { type: "image_url", image_url: { url: imageData } }
+            ]
+          }
+        ]
+      });
 
-    // recommend table
-    let recommendHtml = '';
-    if (Array.isArray(result.recommend) && result.recommend.length > 0 && typeof result.recommend[0] === 'object') {
-        recommendHtml = `<table class="surgery-table" style="margin:0 auto 1rem auto;min-width:200px;width:100%;max-width:400px;">
-            <thead><tr>
-                <th>추천 시술</th><th>예상 비용 (만원)</th>
-            </tr></thead><tbody>`;
-        result.recommend.forEach(item => {
-            recommendHtml += `<tr>
-                <td>${item.name || ''}</td>
-                <td style="color:#ff6b6b;text-align:right;">${item.price || ''}</td>
-            </tr>`;
-        });
-        recommendHtml += '</tbody></table>';
-    }
+      console.log('OpenAI API 호출 성공');
+      console.log('응답 데이터:', {
+        model: completion.model,
+        finish_reason: completion.choices[0].finish_reason,
+        message_length: completion.choices[0].message.content.length
+      });
 
-    res.json({ result });
+      let content = completion.choices[0].message.content.trim();
+      console.log('원본 응답:', content);
+
+      if (content.startsWith('```')) {
+        content = content.replace(/```json|```/g, '').trim();
+        console.log('코드블록 제거 후:', content);
+      }
+
+      let result;
+      try {
+        result = JSON.parse(content);
+      } catch (e) {
+        console.error('OpenAI 응답 파싱 실패:', content); // 원본 응답 로그
+        result = {
+          recommend: [
+            { name: "이마 지방이식", description: "납작한 이마에 볼륨감을 더해 입체감 부여", price: 180, type: "성형" },
+            { name: "눈 성형", description: "속쌍꺼풀 라인 개선 및 눈매 교정", price: 250, type: "성형" },
+            { name: "레이저토닝", description: "피부톤 균일화 및 광채 개선", price: 30, type: "피부과" }
+          ],
+          estimate: 460,
+          feedback: "전반적으로 개선이 필요한 얼굴입니다.",
+          error: 'AI 응답 파싱 실패',
+          raw: content
+        };
+      }
+
+      res.json({ result });
+    } catch (error) {
+      console.error('성형 견적 분석 중 오류:', error);
+      res.status(500).json({ error: '분석 중 오류가 발생했습니다.' });
+    }
   } catch (error) {
     console.error('성형 견적 분석 중 오류:', error);
     res.status(500).json({ error: '분석 중 오류가 발생했습니다.' });
