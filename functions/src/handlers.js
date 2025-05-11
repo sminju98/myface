@@ -2,6 +2,8 @@ const OpenAI = require('openai');
 const path = require('path');
 const functions = require('firebase-functions');
 const axios = require('axios');
+const os = require('os');
+const fs = require('fs');
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY || (functions.config().openai && functions.config().openai.api_key)
@@ -599,6 +601,178 @@ async function analyzeSurgery(req, res) {
   }
 }
 
+async function analyzeHusbandSalary(req, res) {
+  try {
+    const { imageData, analysisType } = req.body;
+    if (!imageData) {
+      return res.status(400).json({ error: '이미지가 필요합니다.' });
+    }
+
+    // 이미지 유효성 검사
+    try {
+      validateImage(imageData);
+    } catch (error) {
+      return res.status(400).json({ 
+        error: error.message,
+        errorCode: 'INVALID_IMAGE'
+      });
+    }
+
+    const prompt = `당신은 결혼정보회사 매니저입니다. 사용자의 얼굴을 분석하여 미래 남편의 연봉과 직업을 예측해주세요. 사용자의 얼굴이 예쁠수록 결혼정보회사 등급이 높아서 고연봉 남성을 만나게 됩니다. description에는 재미있는 고백멘트를 써주세요.
+
+다음과 같은 기준으로 분석해주세요:
+1. 결혼정보회사 등급:
+   - 상위 5%: 10억원 이상 (성공한 스타트업 대표, 스타강사, 배우, 아이돌, 건물주 등)
+   - 상위 10%: 3억원 이상 (대기업 임원, 증권맨, 치과의사, 성형외과 의사, 변호사, 구독자 100만 유튜버, 국가대표 운동선수 등)
+   - 상위 20%: 1억원 이상 (대기업 직원, 자영업 사장님, 변리사, 세무사)
+   - 상위 50%: 5천만원 이상 (중견기업 직원, 개발자, 영업직)
+   - 상위 60%: 4천만원 이상 (중소기업 직원, 공무원, 기자 등)
+   - 상위 70%: 2천만원~3천만원 (일반 사무직, 서비스업, 비정규직 등)
+   - 상위 80%: 1천만원~1500만원 (편의점 아르바이트생, 쿠팡맨, 배달 라이더, 예술가, 음악인 등)
+   - 상위 90%~100%: 0원 (무직, 학생 등)
+
+2. 직업군:
+   - IT/기술: 개발자, 엔지니어, 데이터 사이언티스트, IT 서포터, 웹디자이너 등
+   - 금융: 투자은행, 증권, 자산관리, 은행원, 보험설계사, 세무사무직 등
+   - 의료: 의사, 약사, 의료기기, 병원 행정직, 의료기사 등
+   - 법률: 변호사, 법무사, 법원 행정직, 법률사무직 등
+   - 교육: 교수, 강사, 교사, 학원강사, 교육행정직 등
+   - 기업: 대기업 직원, 스타트업 대표, 중소기업 직원, 영업직, 마케팅직 등
+   - 전문직: 건축가, 회계사, 세무사, 공인중개사, 요리사, 미용사 등
+   - 서비스업: 요식업, 소매업, 운수업, 숙박업, 미용업 등
+   - 공공기관: 공무원, 공기업 직원, 비정규직 등
+   - 자영업: 소상공인, 프랜차이즈 점주, 온라인 쇼핑몰 운영 등
+   - 무직 : 학생, 백수
+
+다음 JSON 형식으로 응답해주세요:
+{
+    "salary": "연봉 금액 (숫자만)",
+    "job": "예상 직업",
+    "description": "상세 설명"
+}
+
+예시 응답:
+{
+    "salary": "8500",
+    "job": "IT 기업 개발팀장",
+    "description": "당신의 얼굴에 반한 개발팀장이 사랑의 하트 코드를 선물합니다."
+}
+
+{
+    "salary": "1500",
+    "job": "편의점 아르바이트생",
+    "description": "편의점 아르바이트생이 당신에게 삼각김밥을 선물합니다."
+}`;
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "user",
+          content: [
+            { type: "text", text: prompt },
+            {
+              type: "image_url",
+              image_url: {
+                url: imageData,
+                detail: "high"
+              }
+            }
+          ]
+        }
+      ],
+      max_tokens: 1000
+    });
+
+    const result = JSON.parse(response.choices[0].message.content);
+    res.json({ result });
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).json({ error: '분석 중 오류가 발생했습니다.' });
+  }
+}
+
+async function analyzeMbti(req, res) {
+    try {
+        const { imageData } = req.body;
+        if (!imageData) {
+            return res.status(400).json({ error: '이미지가 필요합니다.' });
+        }
+
+        // 이미지 유효성 검사
+        try {
+            validateImage(imageData);
+        } catch (error) {
+            return res.status(400).json({ 
+                error: error.message,
+                errorCode: 'INVALID_IMAGE'
+            });
+        }
+
+        const prompt = `당신은 MBTI 전문가입니다. 이 사람의 얼굴 표정, 눈빛, 포즈, 전체적인 분위기를 분석하여 MBTI를 예측해주세요.
+
+MBTI 분석 시 다음 요소들을 고려해주세요:
+1. E/I (외향/내향): 표정의 활발함, 눈빛의 방향, 포즈의 개방성
+2. S/N (감각/직관): 시선의 집중도, 표정의 현실감/몽환감
+3. T/F (사고/감정): 표정의 논리성/감성적 표현
+4. J/P (판단/인식): 포즈의 정돈됨/자유로움, 표정의 결정성/유연성
+
+다음 형식으로만 응답해주세요:
+{
+    "mbti": "예측된 MBTI (예: INTJ)",
+    "description": "이 MBTI의 특징과 설명 (2-3문장)",
+    "traits": {
+        "e_i": "외향/내향 설명",
+        "s_n": "감각/직관 설명",
+        "t_f": "사고/감정 설명",
+        "j_p": "판단/인식 설명"
+    }
+}`;
+
+        const completion = await openai.chat.completions.create({
+            model: "gpt-4o-mini",
+            messages: [
+                {
+                    role: "user",
+                    content: [
+                        { type: "text", text: prompt },
+                        { type: "image_url", image_url: { url: imageData } }
+                    ]
+                }
+            ],
+            max_tokens: 1000,
+            temperature: 1.2
+        });
+
+        let content = completion.choices[0].message.content.trim();
+        if (content.startsWith('```')) {
+            content = content.replace(/```json|```/g, '').trim();
+        }
+
+        let result;
+        try {
+            result = JSON.parse(content);
+        } catch (e) {
+            console.error('OpenAI 응답 파싱 실패:', content);
+            result = {
+                mbti: "INTJ",
+                description: "논리적이고 창의적인 성격의 소유자입니다.",
+                traits: {
+                    e_i: "내향적인 성향이 강합니다.",
+                    s_n: "직관적인 사고방식을 가졌습니다.",
+                    t_f: "논리적인 판단을 선호합니다.",
+                    j_p: "체계적인 계획을 좋아합니다."
+                }
+            };
+        }
+
+        res.json({ result });
+    } catch (error) {
+        console.error('MBTI 분석 중 오류:', error);
+        res.status(500).json({ error: 'MBTI 분석 중 오류가 발생했습니다.' });
+    }
+}
+
 module.exports = {
   analyzeImage,
   generateSilhouette,
@@ -606,5 +780,7 @@ module.exports = {
   getImage,
   getWikipediaImage,
   analyzeAnimal,
-  analyzeSurgery
+  analyzeSurgery,
+  analyzeHusbandSalary,
+  analyzeMbti
 }; 

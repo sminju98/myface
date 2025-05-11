@@ -29,4 +29,15 @@ app.post('/analyze-animal', analyzeAnimal);
 
 app.post('/analyze-surgery', analyzeSurgery);
 
+// 남편 연봉 분석 엔드포인트
+app.post('/husband-salary', analyzeHusbandSalary);
+
+// MBTI 분석 엔드포인트
+app.post('/analyze-mbti', analyzeMbti);
+
+exports.analyzeAnimal = functions.https.onRequest(app);
+exports.analyzeSurgery = functions.https.onRequest(app);
+exports.analyzeHusbandSalary = functions.https.onRequest(app);
+exports.analyzeMbti = functions.https.onRequest(app);
+
 exports.api = functions.https.onRequest(app); 

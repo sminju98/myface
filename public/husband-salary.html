@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>내 남편의 연봉은? - 지니어스캣</title>
+    <link rel="icon" type="image/png" href="img/favicon.png">
+    <link rel="apple-touch-icon" href="img/favicon.png">
+    <meta name="theme-color" content="#4b6cb7">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        body.husband-salary {
+            background: #f8f9fa;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .container-husband-salary {
+            background: rgba(255,255,255,0.97);
+            border-radius: 30px;
+            box-shadow: 0 10px 30px rgba(76, 110, 245, 0.08);
+            max-width: 500px;
+            margin: 100px auto 32px auto;
+            padding: 2rem;
+            text-align: center;
+            flex: 1;
+        }
+        .subtitle-husband-salary {
+            color: #4b6cb7;
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+        .description-husband-salary {
+            color: #666;
+            font-size: 0.95rem;
+            margin-bottom: 2rem;
+        }
+        .husband-salary-image {
+            width: 220px;
+            height: 220px;
+            object-fit: cover;
+            margin-bottom: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 4px 15px rgba(76, 110, 245, 0.08);
+        }
+        .upload-button.husband-salary-button {
+            background: linear-gradient(45deg, #ff9a9e, #4b6cb7);
+        }
+    </style>
+</head>
+<body class="husband-salary">
+    <div id="header"></div>
+    <div class="container-husband-salary">
+        <div>
+            <p class="subtitle-husband-salary">내 남편의 연봉은? 💰</p>
+            <p class="description-husband-salary">* 업로드한 이미지는 분석 후 즉시 삭제됩니다.</p>
+        </div>
+        <div class="fortune-teller">
+            <img src="img/salary.png" alt="Husband Salary Predictor" class="husband-salary-image">
+        </div>
+        <div class="upload-section">
+            <div class="button-group">
+                <label class="upload-button husband-salary-button">
+                    <i class="fas fa-user"></i> 내 셀카 올리고 연봉 예측하기 📸
+                    <input type="file" id="husband-salary-photo-upload" accept="image/*" style="display: none;">
+                </label>
+            </div>
+        </div>
+    </div>
+    <div id="footer"></div>
+    <script src="components.js"></script>
+    <script src="script.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+</body>
+</html> 

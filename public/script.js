@@ -3,7 +3,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const uploadTypes = [
         { id: 'husband-photo-upload', type: 'husband' },
         { id: 'wife-photo-upload', type: 'wife' },
-        { id: 'celebrity-photo-upload', type: 'celebrity' }
+        { id: 'celebrity-photo-upload', type: 'celebrity' },
+        { id: 'husband-salary-photo-upload', type: 'husband-salary' },
+        { id: 'mbti-photo-upload', type: 'mbti' }
     ];
     const uploadSection = document.querySelector('.upload-section');
     uploadTypes.forEach(({ id, type }) => {
@@ -30,6 +32,10 @@ document.addEventListener('DOMContentLoaded', () => {
             return `${base}/analyze-animal`;
         } else if (type === 'surgery') {
             return `${base}/analyze-surgery`;
+        } else if (type === 'husband-salary') {
+            return `${base}/husband-salary`;
+        } else if (type === 'mbti') {
+            return `${base}/analyze-mbti`;
         } else {
             return `${base}/analyze-soulmate`;
         }
@@ -107,6 +113,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 '💸 예상 견적을 계산 중...',
                 '✨ AI가 결과를 준비 중...'
             ];
+        } else if (type === 'husband-salary') {
+            title = '미래 남편의 연봉을 예측 중...';
+            messages = [
+                '💰 외모 등급을 평가 중...',
+                '💼 남자와 매칭 중...',
+                '📈 연봉 수준을 계산 중...',
+                '✨ AI가 결과를 준비 중...'
+            ];
+        } else if (type === 'mbti') {
+            title = 'MBTI 분석 중...';
+            messages = [
+                '🧠 얼굴 표정을 분석 중...',
+                '👁️ 눈빛과 표정을 읽는 중...',
+                '🎭 성격 유형을 파악 중...',
+                '✨ AI가 결과를 준비 중...'
+            ];
         } else {
             title = '운명의 배우자를 점치는 중...';
             messages = [
@@ -180,6 +202,67 @@ document.addEventListener('DOMContentLoaded', () => {
                             <b>${result.name}</b><br>
                             <span style="color:#4b6cb7;font-weight:600;">닮은 정도: ${percent}%${similarityText}</span><br>
                             ${result.description}<br>
+                        </div>
+                    </div>
+                    <div class="button-container">
+                        <button class="share-button" onclick="shareLink()">
+                            <i class="fas fa-link"></i> 링크로 공유하기
+                        </button>
+                        <button class="save-image-button" id="save-result-image">내 결과 이미지로 저장하기</button>
+                        <button class="retry-button" onclick="location.reload()">다시 해보기 🔄</button>
+                    </div>
+                </div>
+                <div id="footer"></div>
+            `;
+            document.body.innerHTML = resultHTML;
+            if (typeof loadComponent === 'function') {
+                loadComponent('header.html', 'header');
+                loadComponent('footer.html', 'footer');
+            }
+        } else if (type === 'husband-salary') {
+            const resultHTML = `
+                <div id="header"></div>
+                <div class="container-husband-salary">
+                    <div class="result-card">
+                        <p class="subtitle-husband-salary">내 남편의 연봉</p>
+                        <div class="result-content">
+                            <div class="salary-display">
+                                <span class="salary-number">${result.salary}</span>만원
+                            </div>
+                            <div class="job-info">
+                                <p><b>직업:</b> ${result.job}</p>
+                                <p class="description">${result.description}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="button-container">
+                        <button class="share-button" onclick="shareLink()">
+                            <i class="fas fa-link"></i> 링크로 공유하기
+                        </button>
+                        <button class="save-image-button" id="save-result-image">내 결과 이미지로 저장하기</button>
+                        <button class="retry-button" onclick="location.reload()">다시 해보기 🔄</button>
+                    </div>
+                </div>
+                <div id="footer"></div>
+            `;
+            document.body.innerHTML = resultHTML;
+            if (typeof loadComponent === 'function') {
+                loadComponent('header.html', 'header');
+                loadComponent('footer.html', 'footer');
+            }
+        } else if (type === 'mbti') {
+            const resultHTML = `
+                <div id="header"></div>
+                <div class="container-mbti">
+                    <div class="result-card">
+                        <p class="subtitle-mbti">내 MBTI 예측 결과</p>
+                        <div class="result-content">
+                            <div class="mbti-display">
+                                <span class="mbti-type">${result.mbti}</span>
+                            </div>
+                            <div class="mbti-info">
+                                <p class="description">${result.description}</p>
+                            </div>
                         </div>
                     </div>
                     <div class="button-container">

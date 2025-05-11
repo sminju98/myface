@@ -16,6 +16,48 @@
           "hostname": "geniuscat.co.kr"
         }
       }
+    ],
+    "rewrites": [
+      {
+        "source": "/api/analyze",
+        "function": "analyzeImage"
+      },
+      {
+        "source": "/api/silhouette",
+        "function": "generateSilhouette"
+      },
+      {
+        "source": "/api/celebrity",
+        "function": "analyzeCelebrity"
+      },
+      {
+        "source": "/api/animal",
+        "function": "analyzeAnimal"
+      },
+      {
+        "source": "/api/surgery",
+        "function": "analyzeSurgery"
+      },
+      {
+        "source": "/api/husband-salary",
+        "function": "analyzeHusbandSalary"
+      },
+      {
+        "source": "/api/analyze-celebrity",
+        "function": "analyzeCelebrity"
+      },
+      {
+        "source": "/api/analyze-animal",
+        "function": "analyzeAnimal"
+      },
+      {
+        "source": "/api/analyze-surgery",
+        "function": "analyzeSurgery"
+      },
+      {
+        "source": "/api/analyze-mbti",
+        "function": "analyzeMbti"
+      }
     ]
   },
   "functions": {

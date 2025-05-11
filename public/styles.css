@@ -1271,4 +1271,77 @@ html, body, .body-soulmate {
     transform: translateY(-2px);
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
     background: linear-gradient(45deg, #35508a, #4b6cb7);
+}
+
+.salary-display {
+    text-align: center;
+    margin: 1.5rem 0;
+}
+
+.salary-number {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #4b6cb7;
+}
+
+.salary-unit {
+    font-size: 1.5rem;
+    font-weight: 600;
+    opacity: 0.9;
+}
+
+.salary-label {
+    font-size: 1.1rem;
+    font-weight: 500;
+    opacity: 0.9;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.job-info {
+    background: white;
+    border-radius: 15px;
+    padding: 1.5rem;
+    margin-top: 1.5rem;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+}
+
+.job-info p {
+    margin: 0.5rem 0;
+    color: #333;
+    line-height: 1.6;
+}
+
+.job-info .description {
+    color: #666;
+    font-size: 0.95rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #eee;
+}
+
+.mbti-display {
+    text-align: center;
+    margin: 1.5rem 0;
+}
+
+.mbti-type {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #4b6cb7;
+    letter-spacing: 2px;
+}
+
+.mbti-info {
+    background: white;
+    border-radius: 15px;
+    padding: 1.5rem;
+    margin-top: 1.5rem;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+}
+
+.mbti-info .description {
+    color: #666;
+    font-size: 0.95rem;
+    line-height: 1.6;
 } 
